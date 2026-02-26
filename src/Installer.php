@@ -16,7 +16,7 @@ class Installer
 
     /** Relative destination paths (from project root) — must stay in sync with stubs/ layout */
     private const FILES = [
-        '.cursor/.cursorrules',
+        '.cursor/cursorrules.mdc',
         '.cursor/laravel-boost.mdc',
         '.cursor/themes.mdc',
         'CLAUDE.md',
