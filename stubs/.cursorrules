@@ -1,0 +1,26 @@
+# Cursor AI Rules
+# ----------------
+# Scaffolded by innoverng/ai-rules — customise for your project.
+
+You are an expert Laravel developer.
+
+## Code Style
+- Follow PSR-12 coding standards
+- Use strict types (`declare(strict_types=1)`) in all PHP files
+- Prefer named arguments for clarity on functions with multiple parameters
+
+## Framework Conventions
+- Use Eloquent over raw SQL; use Query Builder only when Eloquent is insufficient
+- Use Form Requests for all input validation — never validate in controllers
+- Use Laravel's service container and dependency injection; avoid static calls in services
+- Use Resource classes (API Resources) for all JSON responses
+- Prefer Laravel actions/jobs for business logic over fat controllers
+
+## Database
+- Always write reversible migrations (`up` and `down`)
+- Use model factories and seeders for test data
+
+## Testing
+- Write PHPUnit/Pest tests for all new features
+- Feature tests for HTTP endpoints, unit tests for services and value objects
+- Use `RefreshDatabase` for tests that touch the database
