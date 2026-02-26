@@ -16,7 +16,9 @@ class Installer
 
     /** Relative destination paths (from project root) — must stay in sync with stubs/ layout */
     private const FILES = [
-        '.cursorrules',
+        '.cursor/.cursorrules',
+        '.cursor/laravel-boost.mdc',
+        '.cursor/themes.mdc',
         'CLAUDE.md',
         '.github/copilot-instructions.md',
     ];
