@@ -21,7 +21,6 @@ class Installer
         '.cursor/rules/laravel-best-practice.mdc',
         '.cursor/rules/laravel-boost.mdc',
         '.cursor/rules/structure.mdc',
-        '.cursor/rules/themes.mdc',
         '.claude/CLAUDE.md',
         '.github/copilot-instructions.md',
         'docs/README.md',
