@@ -8,9 +8,12 @@ Files are copied automatically to your project root when you run `composer requi
 
 | File | Tool |
 |------|------|
-| `.cursorrules` | Cursor |
-| `CLAUDE.md` | Claude Code |
+| `.cursor/rules/*.mdc` (cursorrules, laravel-boost, themes) | Cursor |
+| `.claude/CLAUDE.md` | Claude Code |
 | `.github/copilot-instructions.md` | GitHub Copilot |
+| `docs/README.md` | Project documentation (starter index) |
+
+Cursor rules live in `.cursor/rules/` (Cursor’s recommended path). Claude reads from `.claude/CLAUDE.md` (or project root); Copilot only reads `.github/copilot-instructions.md`.
 
 ## Installation
 

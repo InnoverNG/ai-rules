@@ -16,11 +16,15 @@ class Installer
 
     /** Relative destination paths (from project root) — must stay in sync with stubs/ layout */
     private const FILES = [
-        '.cursor/cursorrules.mdc',
-        '.cursor/laravel-boost.mdc',
-        '.cursor/themes.mdc',
-        'CLAUDE.md',
+        '.cursor/rules/bootstrap.mdc',
+        '.cursor/rules/cursorrules.mdc',
+        '.cursor/rules/laravel-best-practice.mdc',
+        '.cursor/rules/laravel-boost.mdc',
+        '.cursor/rules/structure.mdc',
+        '.cursor/rules/themes.mdc',
+        '.claude/CLAUDE.md',
         '.github/copilot-instructions.md',
+        'docs/README.md',
     ];
 
     public function __construct(
