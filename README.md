@@ -6,12 +6,12 @@ Files are copied automatically to your project root when you run `composer requi
 
 ## Files Installed
 
-| File | Tool |
-|------|------|
-| `.cursor/rules/*.mdc` (cursorrules, laravel-boost, themes) | Cursor |
-| `.claude/CLAUDE.md` | Claude Code |
-| `.github/copilot-instructions.md` | GitHub Copilot |
-| `docs/README.md` | Project documentation (starter index) |
+| File                                                       | Tool                                  |
+| ---------------------------------------------------------- | ------------------------------------- |
+| `.cursor/rules/*.mdc` (cursorrules, laravel-boost, themes) | Cursor                                |
+| `.claude/CLAUDE.md`                                        | Claude Code                           |
+| `.github/copilot-instructions.md`                          | GitHub Copilot                        |
+| `docs/README.md`                                           | Project documentation (starter index) |
 
 Cursor rules live in `.cursor/rules/` (Cursor’s recommended path). Claude reads from `.claude/CLAUDE.md` (or project root); Copilot only reads `.github/copilot-instructions.md`.
 
@@ -20,7 +20,7 @@ Cursor rules live in `.cursor/rules/` (Cursor’s recommended path). Claude read
 From your project root, run:
 
 ```bash
-composer config repository.ai-rules vcs https://github.com/innoverng/ai-rules
+composer config repositories.ai-rules vcs https://github.com/innoverng/ai-rules
 composer config allow-plugins.innoverng/ai-rules true
 composer require innoverng/ai-rules
 ```
@@ -54,9 +54,9 @@ To force-copy all stubs and replace your local files, add this to your project's
 
 ```json
 {
-    "scripts": {
-        "ai-rules:update": "Innoverng\\AiRules\\Installer::forceUpdate"
-    }
+  "scripts": {
+    "ai-rules:update": "Innoverng\\AiRules\\Installer::forceUpdate"
+  }
 }
 ```
 
@@ -87,20 +87,20 @@ If you prefer to edit `composer.json` yourself, add:
 
 ```json
 {
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/innoverng/ai-rules"
-        }
-    ],
-    "require": {
-        "innoverng/ai-rules": "^1.0"
-    },
-    "config": {
-        "allow-plugins": {
-            "innoverng/ai-rules": true
-        }
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/innoverng/ai-rules"
     }
+  ],
+  "require": {
+    "innoverng/ai-rules": "^1.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "innoverng/ai-rules": true
+    }
+  }
 }
 ```
 
