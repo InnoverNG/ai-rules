@@ -17,34 +17,25 @@ Cursor rules live in `.cursor/rules/` (Cursor’s recommended path). Claude read
 
 ## Installation
 
-Add the private GitHub repository and require the package:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/innoverng/ai-rules"
-        }
-    ],
-    "require": {
-        "innoverng/ai-rules": "^1.0"
-    },
-    "config": {
-        "allow-plugins": {
-            "innoverng/ai-rules": true
-        }
-    }
-}
-```
-
-Then run:
+From your project root, run:
 
 ```bash
-composer update
+composer config repository.ai-rules vcs https://github.com/innoverng/ai-rules
+composer config allow-plugins.innoverng/ai-rules true
+composer require innoverng/ai-rules
 ```
 
-On first install the plugin copies all three rule files to your project root. Files that already exist are **never overwritten** — your customisations are always safe.
+No manual editing of `composer.json` — Composer adds the repository, plugin permission, and dependency for you.
+
+**One-line install** (runs the same commands in the current directory):
+
+```bash
+curl -sSL https://raw.githubusercontent.com/innoverng/ai-rules/HEAD/install.sh | bash
+```
+
+**Alternative:** add the repository, require, and `allow-plugins` to your `composer.json` by hand, then run `composer update`. See the [manual snippet](#manual-composerjson-snippet) at the bottom of this README.
+
+On first install the plugin copies all rule files to your project root. Files that already exist are **never overwritten** — your customisations are always safe.
 
 ## Updating Rule Files
 
@@ -88,4 +79,29 @@ Consuming projects pick up the change on their next `composer update innoverng/a
 
 ## Note on `allow-plugins`
 
-Composer 2.2+ requires explicit plugin trust. The `"allow-plugins"` config above is required. Without it, Composer will prompt you interactively the first time, or skip the plugin silently in non-interactive (CI) environments.
+Composer 2.2+ requires explicit plugin trust. The `allow-plugins` config is required. Without it, Composer will prompt you interactively the first time, or skip the plugin silently in non-interactive (CI) environments.
+
+## Manual composer.json snippet
+
+If you prefer to edit `composer.json` yourself, add:
+
+```json
+{
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/innoverng/ai-rules"
+        }
+    ],
+    "require": {
+        "innoverng/ai-rules": "^1.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "innoverng/ai-rules": true
+        }
+    }
+}
+```
+
+Then run `composer update`.
