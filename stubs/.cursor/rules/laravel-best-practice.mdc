@@ -327,6 +327,52 @@ $users = User::with('profile')->get();
 
 [🔝 Back to contents](#contents)
 
+### **Do not put logic in Blade templates — use models or controllers**
+
+Blade views should only receive pre-computed data and render it. Do **not** use `@php` blocks (or inline PHP) to build arrays, format values, or run business/display logic. Put that logic in the **model** (accessors, methods) or the **controller**; pass ready-to-render data to the view.
+
+Bad:
+
+```blade
+@php
+$meta = [];
+if ($publication->published_at) {
+    $meta[] = $publication->published_at->format('F Y');
+} elseif ($publication->publication_year) {
+    $meta[] = (string) $publication->publication_year;
+}
+if ($publication->journal_name) $meta[] = e($publication->journal_name);
+@endphp
+@foreach($meta as $item) {{ $item }} @endforeach
+```
+
+Good (logic in the model):
+
+```php
+// In Publication model
+public function displayMeta(): array
+{
+    $meta = [];
+    if ($this->published_at) {
+        $meta[] = $this->published_at->format('F Y');
+    } elseif ($this->publication_year) {
+        $meta[] = (string) $this->publication_year;
+    }
+    if ($this->journal_name) {
+        $meta[] = e($this->journal_name);
+    }
+    return $meta;
+}
+```
+
+```blade
+@foreach($publication->displayMeta() as $item) {{ $item }} @endforeach
+```
+
+Alternatively, the controller can compute the value and pass it: `return view('...', ['displayMeta' => $publication->displayMeta()]);`. The view must not contain logic that builds or transforms data.
+
+[🔝 Back to contents](#contents)
+
 ### **Chunk data for data-heavy tasks**
 
 Bad:
@@ -680,7 +726,7 @@ Avoid using patterns and tools that are alien to Laravel and similar frameworks 
 
 Never put any logic in routes files.
 
-Minimize usage of vanilla PHP in Blade templates.
+Do not put logic in Blade: keep views for rendering only; put logic in models or controllers (see **Do not put logic in Blade templates** above).
 
 Use in-memory DB for testing.
 
