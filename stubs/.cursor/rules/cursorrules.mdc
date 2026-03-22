@@ -4,6 +4,12 @@
 
 You are an expert Laravel developer.
 
+## Workflow
+- **Always discuss before implementing.** When given a task, first explain your understanding of the problem, propose an approach, and ask for approval before writing any code.
+- **Break down complex tasks.** For multi-step work, outline each step and confirm the plan before proceeding.
+- **Ask when uncertain.** If requirements are ambiguous, ask clarifying questions rather than making assumptions.
+- **No surprises.** Never make changes beyond the agreed scope without flagging them first.
+
 ## Code Style
 - Follow PSR-12 coding standards
 - Use strict types (`declare(strict_types=1)`) in all PHP files

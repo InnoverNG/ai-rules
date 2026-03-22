@@ -2,6 +2,12 @@
 
 > Scaffolded by `innoverng/ai-rules` — customise for your project.
 
+## Workflow
+- **Always discuss before implementing.** When given a task, first explain your understanding of the problem, propose an approach, and ask for approval before writing any code.
+- **Break down complex tasks.** For multi-step work, outline each step and confirm the plan before proceeding.
+- **Ask when uncertain.** If requirements are ambiguous, ask clarifying questions rather than making assumptions.
+- **No surprises.** Never make changes beyond the agreed scope without flagging them first.
+
 ## Code Style
 - PHP 8.1+ — use enums, readonly properties, fibers, and intersection types where appropriate
 - Follow PSR-12; `declare(strict_types=1)` in every PHP file
@@ -13,6 +19,10 @@
 - Form Requests for validation — keep controllers thin
 - Use Eloquent relationships; avoid N+1 with eager loading (`with()`)
 - Prefer queued jobs for anything that does not need to be synchronous
+
+## Blade / views
+- **Never** use `@php` / `@endphp` or inline `<?php ?>` in Blade for logic.
+- Compute in the **controller**, **model**, **helper**, or ViewModel; pass ready-to-use variables to the view. Blade is for presentation (`@if`, `@foreach`, `{{ }}`), not for building data.
 
 ## API Design
 - Version all API routes (`/api/v1/...`)

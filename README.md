@@ -8,7 +8,7 @@ Files are copied automatically to your project root when you run `composer requi
 
 | File                                                       | Tool                                  |
 | ---------------------------------------------------------- | ------------------------------------- |
-| `.cursor/rules/*.mdc` (cursorrules, laravel-boost, themes) | Cursor                                |
+| `.cursor/rules/*.mdc` (see package stubs) | Cursor |
 | `.claude/CLAUDE.md`                                        | Claude Code                           |
 | `.github/copilot-instructions.md`                          | GitHub Copilot                        |
 | `docs/README.md`                                           | Project documentation (starter index) |

@@ -1,0 +1,15 @@
+---
+description: Blade files — never use @php; compute in PHP and pass variables
+globs: ["**/*.blade.php"]
+alwaysApply: false
+---
+
+# Blade: no `@php` blocks
+
+This project forbids `@php` / `@endphp` and raw `<?php ?>` in Blade for logic.
+
+- **Compute** in the controller, model (methods/accessors), Form Request, ViewModel, or a **helper** — alongside other variables you already prepare.
+- **Pass** strings, numbers, booleans, collections, or pre-built arrays into the view.
+- **Blade** may use `@if`, `@foreach`, `@include`, `{{ }}`, and simple property access only.
+
+If you are about to add or keep a `@php` block: **refactor** — lift the logic up and pass named variables instead.

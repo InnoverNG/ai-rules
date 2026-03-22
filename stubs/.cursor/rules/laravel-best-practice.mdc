@@ -329,7 +329,11 @@ $users = User::with('profile')->get();
 
 ### **Do not put logic in Blade templates — use models or controllers**
 
-Blade views should only receive pre-computed data and render it. Do **not** use `@php` blocks (or inline PHP) to build arrays, format values, or run business/display logic. Put that logic in the **model** (accessors, methods) or the **controller**; pass ready-to-render data to the view.
+**Hard rule (non-negotiable):** Do **not** use `@php` / `@endphp` blocks in Blade — not even for “small” helpers. Do **not** use `<?php ... ?>` in views. All computation, formatting, and data shaping happens in **PHP outside the template**: **controller**, **model** (accessors, methods), **Form Request**, **ViewModel / DTO**, or a **named helper** (`app/Support`, `app/Helpers`, or your project’s helper convention). Pass **only** ready-to-use variables (strings, numbers, collections, booleans, pre-built arrays) into the view.
+
+**When editing or generating Blade:** If you would reach for `@php`, stop — move that code to the layer above and pass the result as a variable.
+
+Blade is for **presentation only**: directives (`@if`, `@foreach`, `@include`), escaping (`{{ }}`), and trivial property access. Anything that assigns variables, builds arrays, loops to compute values, or formats data for display belongs in PHP.
 
 Bad:
 
@@ -346,7 +350,7 @@ if ($publication->journal_name) $meta[] = e($publication->journal_name);
 @foreach($meta as $item) {{ $item }} @endforeach
 ```
 
-Good (logic in the model):
+Good (logic in the model; view only iterates):
 
 ```php
 // In Publication model
@@ -369,7 +373,17 @@ public function displayMeta(): array
 @foreach($publication->displayMeta() as $item) {{ $item }} @endforeach
 ```
 
-Alternatively, the controller can compute the value and pass it: `return view('...', ['displayMeta' => $publication->displayMeta()]);`. The view must not contain logic that builds or transforms data.
+Good (logic in the controller — same outcome):
+
+```php
+return view('publications.show', [
+    'displayMeta' => $publication->displayMeta(),
+]);
+```
+
+```blade
+@foreach($displayMeta as $item) {{ $item }} @endforeach
+```
 
 [🔝 Back to contents](#contents)
 

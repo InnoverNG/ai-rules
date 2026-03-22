@@ -2,6 +2,12 @@
 
 > Scaffolded by `innoverng/ai-rules` — customise for your project.
 
+## Workflow
+- **Always discuss before implementing.** When given a task, first explain your understanding of the problem, propose an approach, and ask for approval before writing any code.
+- **Break down complex tasks.** For multi-step work, outline each step and confirm the plan before proceeding.
+- **Ask when uncertain.** If requirements are ambiguous, ask clarifying questions rather than making assumptions.
+- **No surprises.** Never make changes beyond the agreed scope without flagging them first.
+
 ## Stack
 - PHP 8.1+, Laravel 11+
 - MySQL / PostgreSQL (prefer Eloquent ORM)

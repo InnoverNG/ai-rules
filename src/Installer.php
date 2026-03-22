@@ -16,6 +16,7 @@ class Installer
 
     /** Relative destination paths (from project root) — must stay in sync with stubs/ layout */
     private const FILES = [
+        '.cursor/rules/blade-no-php.mdc',
         '.cursor/rules/bootstrap.mdc',
         '.cursor/rules/cursorrules.mdc',
         '.cursor/rules/laravel-best-practice.mdc',
