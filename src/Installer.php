@@ -13,6 +13,7 @@ class Installer
 {
     private string $projectRoot;
     private string $stubsDir;
+    private string $backupDir;
 
     /** Relative destination paths (from project root) — must stay in sync with stubs/ layout */
     private const FILES = [
@@ -26,6 +27,12 @@ class Installer
         '.github/copilot-instructions.md',
         'docs/README.md',
     ];
+
+    /**
+     * Directories whose files should NOT be gitignored (user owns these).
+     * docs/ is intentional — users commit their own documentation.
+     */
+    private const GITIGNORE_SKIP_DIRS = ['docs'];
 
     public function __construct(
         private readonly Composer $composer,
@@ -43,6 +50,8 @@ class Installer
         $this->stubsDir = $package
             ? $this->composer->getInstallationManager()->getInstallPath($package) . '/stubs'
             : __DIR__ . '/../stubs'; // fallback during self-install
+
+        $this->backupDir = $this->projectRoot . '/.ai-rules-backup';
     }
 
     public function copyStubs(bool $install): void
@@ -62,6 +71,8 @@ class Installer
                 $this->handleUpdate($source, $dest, $relativePath);
             }
         }
+
+        $this->writeGitignores();
     }
 
     /**
@@ -89,6 +100,8 @@ class Installer
             copy($source, $dest);
             $event->getIO()->write("  <info>[ai-rules] Force-copied:</info> {$relativePath}");
         }
+
+        $installer->writeGitignores();
     }
 
     private function handleInstall(string $source, string $dest, string $relativePath): void
@@ -116,9 +129,80 @@ class Installer
             return;
         }
 
-        $this->io->write("  <comment>[ai-rules] Rule file updated in package but NOT overwritten:</comment> {$relativePath}");
-        $this->io->write("    Review new stub: vendor/innoverng/ai-rules/stubs/{$relativePath}");
-        $this->io->write("    Merge manually, or run:  composer ai-rules:update");
+        // Backup: remove old backup, save current local copy, then overwrite
+        $backupPath = $this->backupDir . '/' . $relativePath;
+        $this->ensureDirectory($backupPath);
+
+        if (file_exists($backupPath)) {
+            unlink($backupPath);
+        }
+
+        copy($dest, $backupPath);
+        copy($source, $dest);
+
+        $this->io->write("  <info>[ai-rules] Updated:</info> {$relativePath} <comment>(previous version backed up to .ai-rules-backup/{$relativePath})</comment>");
+    }
+
+    /**
+     * Writes a managed # BEGIN ai-rules / # END ai-rules block into the .gitignore
+     * of each directory that contains files we manage. Derives entries directly from
+     * FILES so it stays in sync automatically when new stubs are added.
+     * docs/ is skipped — users own and commit their own documentation.
+     */
+    private function writeGitignores(): void
+    {
+        // Group managed files by their directory, skipping excluded dirs
+        $dirs = [];
+        foreach (self::FILES as $relativePath) {
+            $dir = dirname($relativePath);
+            if (in_array($dir, self::GITIGNORE_SKIP_DIRS, strict: true) || $dir === '.') {
+                continue;
+            }
+            $dirs[$dir][] = basename($relativePath);
+        }
+
+        foreach ($dirs as $dir => $entries) {
+            $this->writeManagedBlock(
+                $this->projectRoot . '/' . $dir . '/.gitignore',
+                $entries
+            );
+        }
+
+        // Backup folder: ignore everything, but track the .gitignore itself
+        $backupGitignore = $this->backupDir . '/.gitignore';
+        $this->ensureDirectory($backupGitignore);
+        if (!file_exists($backupGitignore)) {
+            file_put_contents($backupGitignore, "*\n!.gitignore\n");
+        }
+    }
+
+    /**
+     * Inserts or replaces the managed block in a .gitignore file.
+     * Any content outside the markers is left untouched.
+     */
+    private function writeManagedBlock(string $gitignorePath, array $entries): void
+    {
+        $block  = "# BEGIN ai-rules (managed — do not edit this block)\n";
+        $block .= implode("\n", $entries) . "\n";
+        $block .= "# END ai-rules\n";
+
+        $this->ensureDirectory($gitignorePath);
+
+        if (!file_exists($gitignorePath)) {
+            file_put_contents($gitignorePath, $block);
+            return;
+        }
+
+        $existing = file_get_contents($gitignorePath);
+        $pattern  = '/# BEGIN ai-rules.*?# END ai-rules\n?/s';
+
+        $updated = preg_match($pattern, $existing)
+            ? preg_replace($pattern, $block, $existing)
+            : rtrim($existing) . "\n\n" . $block;
+
+        if ($updated !== $existing) {
+            file_put_contents($gitignorePath, $updated);
+        }
     }
 
     private function ensureDirectory(string $filePath): void
