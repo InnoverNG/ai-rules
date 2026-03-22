@@ -129,7 +129,7 @@ Laravel Best Practices
 - Implement proper security measures, including CSRF protection, XSS prevention, and input sanitization
 
 Code Architecture
-_ Naming Conventions: - Use consistent naming conventions for folders, classes, and files. - Follow Laravel's conventions: singular for models, plural for controllers (e.g., User.php, UsersController.php).
+_ Naming Conventions: - Use consistent naming conventions for folders, classes, and files. - Follow Laravel's conventions: singular for models, singular for controllers (e.g., User.php, UserController.php).
 _ Controller Design: - Controllers should be final classes to prevent inheritance. - Make controllers read-only (i.e., no property mutations). - Avoid injecting dependencies directly into controllers. Instead, use method injection or service classes.
 _ Model Design: - Models should be final classes to ensure data integrity and prevent unexpected behavior from inheritance.
 _ Services: - Place service classes inside the same feature folder as the controller (e.g. `app/Http/Controllers/Billing/BillingService.php`). - Do NOT create a global `app/Services` folder; each feature owns its services, requests, etc. - Service classes should be final and read-only. - Use services for complex business logic, keeping controllers thin.
