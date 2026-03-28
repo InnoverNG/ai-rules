@@ -1,0 +1,24 @@
+---
+alwaysApply: true
+---
+
+## Blade / Views
+
+- **Never** use `@php` / `@endphp` or inline `<?php ?>` in Blade for logic.
+- Blade is for presentation only (`@if`, `@foreach`, `{{ }}`). Compute data in controllers, models, helpers, or ViewModels — pass ready-to-use variables to the view.
+- **Never** write `<style>` blocks inside Blade templates.
+- **Never** use inline `style=""` attributes. Always express styles as classes in the appropriate CSS file.
+
+## Frontend Assets
+
+- All custom CSS must live in `public/custom/` using the naming pattern `custom-{name}.css`
+  (e.g. `public/custom/custom-dashboard.css`, `public/custom/custom-auth.css`).
+- One file per feature or page. Do not create a single monolithic `custom.css`.
+- Link the stylesheet using the `asset()` helper, placed in the `@section('styles')` stack or
+  equivalent layout slot — never hardcoded in a component or partial:
+  ```blade
+  <link rel="stylesheet" href="{{ asset('custom/custom-{name}.css') }}">
+  ```
+- CSS in these files must use the design system token variables (`var(--color-*)`, `var(--shadow-*)`, etc.)
+  and follow the `ui-` class prefix convention.
+- Refer to `.cursor/rules/design.md` for the full design system and token reference.
