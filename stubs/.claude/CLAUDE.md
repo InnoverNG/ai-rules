@@ -2,6 +2,16 @@
 
 > Scaffolded by `innoverng/ai-rules` — customise for your project.
 
+## Imported Rules
+
+@../.cursor/rules/cursorrules.mdc
+@../.cursor/rules/laravel-best-practice.mdc
+@../.cursor/rules/structure.mdc
+@../.cursor/rules/blade-no-php.mdc
+@../.cursor/rules/bootstrap.mdc
+@../.cursor/rules/laravel-boost.mdc
+@../.github/copilot-instructions.md
+
 ## Stack
 
 - Before starting any task, read `composer.json` and `composer.lock` to determine the exact PHP and Laravel (and other package) versions in use. Never assume versions — always derive them from these files.
@@ -40,7 +50,8 @@
 - Keep the folder flat: controller, service, and form request in the same folder
 - Sub-folders only when a feature exceeds 5–6 files of the same type, and only inside that feature folder
 - Shared/cross-cutting logic lives in `app/Shared` only
-- Do NOT create global `app/Services`, `app/Actions`, or `app/Http/Requests` folders
+- Do NOT create global `app/Services`, `app/Actions`, `app/Http/Requests`, or `app/Mail` folders
+- Mail and Notification classes that belong to a feature live inside that feature's folder (e.g. `app/Http/Controllers/Auth/VerifyEmailMail.php`)
 - Routes live in `routes/web.php` and `routes/api.php` only — no per-feature route files
 
 ## Framework Conventions
