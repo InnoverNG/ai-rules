@@ -34,9 +34,10 @@ class Installer
         $localRepo = $this->composer->getRepositoryManager()->getLocalRepository();
         $package   = $localRepo->findPackage('innoverng/ai-rules', '*');
 
-        $this->stubsDir = $package
+        $rawStubsDir    = $package
             ? $this->composer->getInstallationManager()->getInstallPath($package) . '/stubs'
             : __DIR__ . '/../stubs'; // fallback during self-install
+        $this->stubsDir = realpath($rawStubsDir) ?: $rawStubsDir;
 
         $this->backupDir = $this->projectRoot . '/.ai-rules-backup';
     }
