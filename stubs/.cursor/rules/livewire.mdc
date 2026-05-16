@@ -1,0 +1,268 @@
+---
+description: Livewire v3 components — structure, properties, actions, events, and performance
+globs: ["app/Livewire/**/*.php", "app/Http/Livewire/**/*.php", "resources/views/livewire/**/*.blade.php"]
+alwaysApply: false
+---
+
+# Livewire v3 Rules
+
+## Component Organisation
+
+- Store components in `app/Livewire/{Feature}/` mirroring the controller feature-folder convention.
+- Name component classes as singular, PascalCase nouns or noun phrases: `UserProfile`, `OrderSummary`, `CreatePost`.
+- Use `php artisan make:livewire` to scaffold — never create the class and view manually.
+- The Blade view lives at `resources/views/livewire/{feature}/{component-name}.blade.php` (kebab-case).
+- `final` classes only — Livewire components must not be extended.
+- **One component = one responsibility.** If a component handles more than one distinct concern, split it. Extract reusable UI into Blade components, not into a larger Livewire component.
+- Avoid "god components" — names like `AdminDashboardManagerComponent` are a red flag.
+
+Good split:
+- `UserTable` — renders and paginates users
+- `UserFilters` — manages filter state
+- `EditUserModal` — handles the edit form
+
+Bad:
+- `UserAdminComponent` — does all of the above in one class
+
+## Component Class
+
+- Declare `strict_types=1` in every component file.
+- Use PHP 8 constructor property promotion only for injected services; do **not** put Livewire public properties in the constructor.
+- All state that Livewire should track must be `public` properties. Keep `protected` / `private` for internal helpers.
+- Type-hint every public property. Use `#[Locked]` for properties that must not be modified from the browser.
+- Use `#[Validate]` (attribute-based) validation on properties instead of a separate `rules()` array when the rules are simple and static.
+- For complex, conditional, or dynamic rules, define a `rules(): array` method and call `$this->validate()` explicitly.
+- For forms with many fields or reusable validation logic, extract a `Livewire\Form` object instead of growing the component class.
+- Never use `$this->emit()` (Livewire v2 API) — use `$this->dispatch()` for events.
+- Keep action methods short: validate → call a service → update state → dispatch event. Business logic belongs in a service class, not the component.
+- **Never query the database inside `render()`.** Use `#[Computed]` properties or load data in `mount()` / `hydrate()`. Querying in `render()` runs on every re-render and causes hidden N+1 issues.
+- Use `#[On('eventName')]` to listen for browser and component events instead of the `$listeners` array.
+- Prefer `#[Computed]` for derived values over re-computing inside the view or `render()`.
+
+Bad (queries on every render):
+
+```php
+public function render(): \Illuminate\View\View
+{
+    return view('livewire.orders.index', [
+        'orders' => Order::where('user_id', $this->userId)->latest()->get(),
+    ]);
+}
+```
+
+Good (computed property, cached per request):
+
+```php
+#[Computed]
+public function orders(): \Illuminate\Pagination\LengthAwarePaginator
+{
+    return Order::where('user_id', $this->userId)->latest()->paginate(20);
+}
+
+public function render(): \Illuminate\View\View
+{
+    return view('livewire.orders.index');
+}
+```
+
+Good (component class example):
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\Orders;
+
+use App\Livewire\Orders\Services\PlaceOrderService;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
+use Livewire\Attributes\Validate;
+use Livewire\Component;
+
+final class CreateOrder extends Component
+{
+    #[Locked]
+    public int $userId;
+
+    #[Validate('required|string|max:255')]
+    public string $title = '';
+
+    #[Validate('required|integer|min:1')]
+    public int $quantity = 1;
+
+    #[Computed]
+    public function total(): float
+    {
+        return $this->quantity * $this->unitPrice;
+    }
+
+    public function save(PlaceOrderService $service): void
+    {
+        $this->validate();
+
+        $service->place($this->userId, $this->title, $this->quantity);
+
+        $this->dispatch('order-placed');
+        $this->reset('title', 'quantity');
+    }
+
+    #[On('cart-cleared')]
+    public function handleCartCleared(): void
+    {
+        $this->reset('title', 'quantity');
+    }
+
+    public function render(): \Illuminate\View\View
+    {
+        return view('livewire.orders.create-order');
+    }
+}
+```
+
+Bad:
+
+```php
+// Livewire v2 patterns — do not use
+class CreateOrder extends Component
+{
+    protected $listeners = ['cartCleared' => 'handleCartCleared']; // use #[On]
+    protected $rules = ['title' => 'required']; // use #[Validate] or rules()
+
+    public function save()
+    {
+        // logic directly in component — move to service
+        Order::create(['user_id' => auth()->id(), 'title' => $this->title]);
+        $this->emit('orderPlaced'); // use $this->dispatch()
+    }
+}
+```
+
+## Blade Views
+
+- Every Livewire Blade view must have a **single root element** (or use `@teleport` for portals).
+- Use `wire:model` for two-way binding. Choose the modifier that matches the UX need:
+  - No modifier — deferred until form submit (default, fewest requests)
+  - `wire:model.blur` — fires on field blur; good for email/password validation
+  - `wire:model.live` — fires on every keystroke; only for instant feedback (e.g. character counters)
+  - `wire:model.live.debounce.300ms` — debounced live; right for search inputs
+- Use `wire:submit` on `<form>` elements — never `wire:click` on a submit button.
+- Use `wire:loading` / `wire:target` to give visual feedback during network requests.
+- Do **not** use `@php` blocks in Livewire views — same rule as all other Blade templates.
+- Prefer `$wire` (the JS object) in inline Alpine.js rather than mixing `@entangle` heavily.
+- Wrap third-party JS components (charts, rich-text editors, date pickers) with `wire:ignore` so Livewire does not re-render and destroy them.
+
+Good:
+
+```blade
+<div>
+    <form wire:submit="save">
+        <input wire:model="title" type="text" placeholder="Title">
+        @error('title') <span>{{ $message }}</span> @enderror
+
+        <button type="submit" wire:loading.attr="disabled">
+            <span wire:loading.remove>Save</span>
+            <span wire:loading>Saving…</span>
+        </button>
+    </form>
+</div>
+```
+
+Bad:
+
+```blade
+<div>
+    {{-- using wire:click on a submit button instead of wire:submit on the form --}}
+    <input wire:model.live="title">
+    <button wire:click="save">Save</button>
+</div>
+```
+
+## Performance
+
+- Use `lazy` loading (`<livewire:component lazy />`) for components below the fold or loaded conditionally.
+- **Prefer Laravel Reverb / Echo broadcasting over `wire:poll` for real-time updates.** `wire:poll` is acceptable only for dashboards, admin monitoring panels, and queue-status displays where the polling frequency is low (≥ 5 s) and the cost of a missed update is low.
+- Use `wire:model` (deferred, form-submit) over `wire:model.live` for inputs that do not require instant server round-trips.
+- Paginate large datasets with `WithPagination` — never load unbounded collections into component state.
+- Cache expensive `#[Computed]` values where appropriate: use `#[Computed(persist: true)]` for values that survive re-renders.
+
+## Events
+
+- Use `$this->dispatch('event-name', ...args)` to fire events from the server.
+- Use `$this->dispatch('event-name')->to(OtherComponent::class)` to target a specific component.
+- Use `$this->dispatchSelf('event-name')` only when the event is meant for the same component instance.
+- Listen with `#[On('event-name')]` on a method in the receiving component.
+- For browser events (Alpine.js ↔ Livewire), use `$dispatch('event-name')` on the JS side and `#[On('event-name')]` on the PHP side.
+
+## JavaScript Interop
+
+- **Do not duplicate Livewire state in JavaScript.** Livewire properties are the single source of truth; JS must not shadow or sync them independently.
+- Communicate between Livewire and JavaScript via browser events — dispatch from PHP, listen in JS; dispatch from JS, listen with `#[On]` in PHP.
+- Use `wire:ignore` on any DOM node managed by a third-party library (chart, rich-text editor, date picker) to prevent Livewire morphing from destroying it.
+
+```php
+// Livewire side — dispatch a browser event
+$this->dispatch('chart-updated', data: $this->chartData);
+```
+
+```html
+<!-- JS side — listen and re-initialize the library -->
+<div wire:ignore id="revenue-chart"></div>
+<script>
+window.addEventListener('chart-updated', event => {
+    myChart.update(event.detail.data);
+});
+</script>
+```
+
+- For Bootstrap modals, dialogs, and toasts triggered by Livewire: dispatch a browser event from PHP; open the component with vanilla JS in the event listener. Never open Bootstrap components via Livewire DOM mutations.
+
+```php
+$this->dispatch('open-delete-modal', id: $this->recordId);
+```
+
+```js
+window.addEventListener('open-delete-modal', ({ detail }) => {
+    document.getElementById('record-id-input').value = detail.id;
+    new bootstrap.Modal(document.getElementById('deleteModal')).show();
+});
+```
+
+## Security
+
+- Mark any property that must not be tampered with from the client as `#[Locked]`.
+- Never use a public property to store sensitive data (tokens, passwords) — keep those in `protected` or session.
+- Always validate before persisting: call `$this->validate()` or use `#[Validate]` before any database write.
+- Use Policies and Gates inside action methods — Livewire does not protect actions automatically.
+
+## Testing
+
+- Test Livewire components with `Livewire::test()` — use Pest syntax.
+- Assert component state, rendered output, emitted events, and redirects.
+- Use `actingAs()` before `Livewire::test()` to simulate authenticated users.
+
+```php
+it('saves an order', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(CreateOrder::class, ['userId' => $user->id])
+        ->set('title', 'My Order')
+        ->set('quantity', 2)
+        ->call('save')
+        ->assertDispatched('order-placed')
+        ->assertSet('title', '');
+});
+```
+
+## Naming Quick-Reference
+
+| What               | Convention          | Example                         |
+| ------------------ | ------------------- | ------------------------------- |
+| Component class    | PascalCase singular | `CreateOrder`, `UserProfile`    |
+| Component folder   | Feature folder      | `app/Livewire/Orders/`          |
+| Blade view         | kebab-case          | `create-order.blade.php`        |
+| Action method      | camelCase verb      | `save()`, `deleteItem()`        |
+| Event name         | kebab-case string   | `'order-placed'`, `'cart-updated'` |
+| Computed property  | camelCase noun      | `total()`, `formattedDate()`    |

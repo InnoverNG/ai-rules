@@ -24,6 +24,10 @@ We follow the **default Laravel structure**. Controllers live under `app/Http/Co
 - Jobs: verb phrase — `SendWelcomeEmail`, `ProcessPayment`
 - Events: past-tense — `UserRegistered`, `OrderShipped`
 - Listeners: present-tense action — `SendWelcomeNotification`
+- **Action / service methods: use explicit, domain-specific verbs.** Avoid generic names like `handle()`, `process()`, `run()`, or `execute()` — they reveal nothing about intent.
+
+  Good: `createInvoice()`, `archiveUser()`, `syncInventory()`, `chargeCard()`
+  Bad: `handle()`, `process()`, `run()`, `execute()`
 
 **Controllers**
 - `final` classes — no inheritance
@@ -52,6 +56,8 @@ We follow the **default Laravel structure**. Controllers live under `app/Http/Co
 
 - Eloquent ORM and Query Builder over raw SQL
 - Repository and Service patterns for organization and reusability
+- **Always define foreign key constraints in migrations** — never rely on application-layer integrity alone.
+- **Index every column used in `where`, `orderBy`, or `join` clauses** that runs against non-trivial data volumes. Add indexes in the same migration that creates the column.
 - Laravel Sanctum for API token management; Policies and Gates for authorization
 - Caching via Redis or Memcached for performance-critical paths
 - Queued jobs and Laravel Horizon for long-running or background tasks

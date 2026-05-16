@@ -10,6 +10,7 @@
 @../.cursor/rules/blade-no-php.mdc
 @../.cursor/rules/bootstrap.mdc
 @../.cursor/rules/laravel-boost.mdc
+@../.cursor/rules/livewire.mdc
 @../.github/copilot-instructions.md
 
 ## Stack

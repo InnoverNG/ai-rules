@@ -62,6 +62,24 @@
   ```
 - CSS classes use the `ui-` prefix and design system tokens (`var(--color-*)`, `var(--shadow-*)`)
 
+## Livewire v3
+
+- Store components in `app/Livewire/{Feature}/`; views in `resources/views/livewire/{feature}/`.
+- Use `php artisan make:livewire` — never create component class and view manually.
+- Component classes must be `final` with `declare(strict_types=1)`.
+- All tracked state must be `public` typed properties. Use `#[Locked]` for browser-immutable properties.
+- Use `#[Validate]` for simple static rules; use a `rules(): array` method for dynamic rules.
+- Use `#[Computed]` for derived values — never compute in `render()` or the Blade template.
+- Use `$this->dispatch()` for events (not `$this->emit()` — that is Livewire v2).
+- Use `#[On('event-name')]` to listen for events — not the `$listeners` array.
+- Keep action methods thin: validate → service → update state → dispatch event.
+- Every Livewire Blade view must have a single root element.
+- Use `wire:submit` on `<form>` — not `wire:click` on a submit button.
+- Prefer deferred `wire:model` (form-submit binding) over `wire:model.live` to minimise round-trips.
+- Use `wire:loading` / `wire:target` for user feedback during requests.
+- Mark sensitive or tamper-proof properties `#[Locked]`; never store secrets in public properties.
+- Test with `Livewire::test()` using Pest; assert state, output, dispatched events, and redirects.
+
 ## API Design
 
 - Version all routes: `/api/v1/...`
