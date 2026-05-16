@@ -15,19 +15,6 @@ class Installer
     private string $stubsDir;
     private string $backupDir;
 
-    /** Relative destination paths (from project root) — must stay in sync with stubs/ layout */
-    private const FILES = [
-        '.cursor/rules/blade-no-php.mdc',
-        '.cursor/rules/bootstrap.mdc',
-        '.cursor/rules/cursorrules.mdc',
-        '.cursor/rules/laravel-best-practice.mdc',
-        '.cursor/rules/laravel-boost.mdc',
-        '.cursor/rules/structure.mdc',
-        '.claude/CLAUDE.md',
-        '.github/copilot-instructions.md',
-        'docs/README.md',
-    ];
-
     /**
      * Directories whose files should NOT be gitignored (user owns these).
      * docs/ is intentional — users commit their own documentation.
@@ -56,7 +43,7 @@ class Installer
 
     public function copyStubs(bool $install): void
     {
-        foreach (self::FILES as $relativePath) {
+        foreach ($this->discoverStubFiles() as $relativePath) {
             $source = $this->stubsDir . '/' . $relativePath;
             $dest   = $this->projectRoot . '/' . $relativePath;
 
@@ -87,14 +74,9 @@ class Installer
     {
         $installer = new self($event->getComposer(), $event->getIO());
 
-        foreach (self::FILES as $relativePath) {
+        foreach ($installer->discoverStubFiles() as $relativePath) {
             $source = $installer->stubsDir . '/' . $relativePath;
             $dest   = $installer->projectRoot . '/' . $relativePath;
-
-            if (!file_exists($source)) {
-                $event->getIO()->writeError("  <warning>[ai-rules] Stub missing: {$relativePath}</warning>");
-                continue;
-            }
 
             $installer->ensureDirectory($dest);
             copy($source, $dest);
@@ -144,36 +126,46 @@ class Installer
     }
 
     /**
-     * Writes a managed # BEGIN ai-rules / # END ai-rules block into the .gitignore
-     * of each directory that contains files we manage. Derives entries directly from
-     * FILES so it stays in sync automatically when new stubs are added.
-     * docs/ is skipped — users own and commit their own documentation.
+     * Writes a managed block in the project root .gitignore (creates the file if missing).
+     * Ignores .ai-rules-backup/ and every package-managed stub path. docs/ is excluded.
      */
     private function writeGitignores(): void
     {
-        // Group managed files by their directory, skipping excluded dirs
-        $dirs = [];
-        foreach (self::FILES as $relativePath) {
-            $dir = dirname($relativePath);
-            if (in_array($dir, self::GITIGNORE_SKIP_DIRS, strict: true) || $dir === '.') {
+        $entries = ['.ai-rules-backup/'];
+
+        foreach ($this->discoverStubFiles() as $relativePath) {
+            if ($this->shouldSkipGitignoreForStub($relativePath)) {
                 continue;
             }
-            $dirs[$dir][] = basename($relativePath);
+            $entries[] = $relativePath;
         }
 
-        foreach ($dirs as $dir => $entries) {
-            $this->writeManagedBlock(
-                $this->projectRoot . '/' . $dir . '/.gitignore',
-                $entries
-            );
+        sort($entries);
+        // Keep backup folder first after sort (.ai-rules-backup/ sorts before paths)
+        $entries = array_values(array_unique($entries));
+
+        $this->writeManagedBlock($this->projectRoot . '/.gitignore', $entries);
+    }
+
+    private function shouldSkipGitignoreForStub(string $relativePath): bool
+    {
+        if ($relativePath === '.' || dirname($relativePath) === '.') {
+            return true;
         }
 
-        // Backup folder: ignore everything, but track the .gitignore itself
-        $backupGitignore = $this->backupDir . '/.gitignore';
-        $this->ensureDirectory($backupGitignore);
-        if (!file_exists($backupGitignore)) {
-            file_put_contents($backupGitignore, "*\n!.gitignore\n");
+        $dir = dirname($relativePath);
+
+        if (in_array($dir, self::GITIGNORE_SKIP_DIRS, strict: true)) {
+            return true;
         }
+
+        foreach (self::GITIGNORE_SKIP_DIRS as $skipDir) {
+            if (str_starts_with($relativePath, $skipDir . '/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -211,5 +203,39 @@ class Installer
         if (!is_dir($dir)) {
             mkdir($dir, 0755, recursive: true);
         }
+    }
+
+    /**
+     * All files under stubs/, relative to the stubs root.
+     * New stubs are picked up automatically — no manual list in this class.
+     *
+     * @return list<string>
+     */
+    private function discoverStubFiles(): array
+    {
+        if (!is_dir($this->stubsDir)) {
+            return [];
+        }
+
+        $files = [];
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($this->stubsDir, \FilesystemIterator::SKIP_DOTS)
+        );
+
+        $stubsRoot = rtrim(str_replace('\\', '/', $this->stubsDir), '/');
+
+        foreach ($iterator as $file) {
+            if (!$file->isFile()) {
+                continue;
+            }
+
+            $path = str_replace('\\', '/', $file->getPathname());
+            $relative = ltrim(substr($path, strlen($stubsRoot)), '/');
+            $files[] = $relative;
+        }
+
+        sort($files);
+
+        return $files;
     }
 }
